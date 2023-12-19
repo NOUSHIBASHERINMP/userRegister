@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable ,BadRequestException,NotFoundException} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -39,20 +39,37 @@ export class UserService {
   }
 
  async findOne(id: string):Promise<User> {
+
+  const isValidId = mongoose.isValidObjectId(id)
+    if(!isValidId){
+      throw new BadRequestException('Please Enter Correct ID ');
+    }
   const userById = await this.userModel.findById(id);
+  if(!userById){
+    throw new NotFoundException('User Not Found');
+  }
     return userById;
   }
 
-   async update(id: string, updateUserDto: UpdateUserDto):Promise<User> {
+   
+  
+  async update(id: string, updateUserDto: UpdateUserDto):Promise<User> {
     const updated = await this.userModel.findByIdAndUpdate(id,updateUserDto,{
       new:true,
       runValidators:true
     });
+    if(! updated){
+      throw new BadRequestException('Require Right one');
+    }
     return  updated.save();
   }
 
 async  remove(id: string){
-    const removed = await this.userModel.findByIdAndDelete(id)
+  const isValidId = mongoose.isValidObjectId(id)
+  if(!isValidId){
+    throw new BadRequestException('Please Enter Correct ID ');
+  }
+    const removed = await this.userModel.findByIdAndDelete(id);
     return "Removed Successfully";
   }
 }
